@@ -110,6 +110,10 @@ def clear_log():
 
 
 def main():
+    if not os.getenv("OPENAI_API_KEY"):
+        print("Please set OPENAI_API_KEY environment variable.")
+        exit()
+
     args = parse_args()
     try:
         while True:
@@ -139,6 +143,7 @@ def main():
         print(e)
     finally:
         print("\nGoodbye!\n\n")
+        exit()
 
 
 if __name__ == "__main__":
