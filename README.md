@@ -20,7 +20,7 @@ This is a command-line interface (CLI) that allows you to interact with the Open
 
 Enter a prompt or some text you want to complete, and the AI will generate a response. You can also use the following commands:
 
-- `end` - exit the CLI.
+- `exit` - exit the CLI.
 - `log` - view the current conversation log.
 - `save` - save the current conversation log to a file.
 - `clear` - clear the current conversation log.

@@ -114,7 +114,7 @@ def main():
     try:
         while True:
             line = input("\033[92m>>>\033[00m ")
-            if line == "end":
+            if line == "exit":
                 break
             if line == "log":
                 print_log()
