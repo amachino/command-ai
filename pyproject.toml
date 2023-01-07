@@ -1,0 +1,9 @@
+[project]
+name = "ai"
+version = "0.0.1"
+dependencies = [
+    "openai>=0.25.0",
+]
+
+[project.scripts]
+ai = "ai.ai:main"
