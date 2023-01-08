@@ -117,7 +117,7 @@ def main():
     args = parse_args()
     try:
         while True:
-            line = input("\033[92m>>>\033[00m ")
+            line = input(">>> ")
             if line == "exit":
                 break
             if line == "log":
