@@ -11,7 +11,7 @@ This is a command-line interface (CLI) that allows you to interact with the Open
 
 ## Installation
 
-1. Clone the repository and install by `pip install . ` inside the directory.
+1. Clone the repository and install by running `pip install . ` in the directory.
 2. Set your OpenAI API key as an environment variable with the name `OPENAI_API_KEY`.
 3. Run the CLI by using the command `ai`.
 
@@ -24,6 +24,7 @@ Enter a prompt or some text you want to complete, and the AI will generate a res
 - `log` - view the current conversation log.
 - `save` - save the current conversation log to a file.
 - `clear` - clear the current conversation log.
+- `forget` - delete the previous message.
 
 ## Arguments
 
