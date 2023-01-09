@@ -1,6 +1,6 @@
 # command `ai`
 
-This is a command-line interface (CLI) that allows you to interact with the OpenAI API to generate text completions. You can use it to generate natural language responses to prompts, or to complete a given text.
+This is a command-line interface (CLI) that allows you to chat with an AI program powered by OpenAI API.
 
 
 ## Requirements
@@ -11,14 +11,38 @@ This is a command-line interface (CLI) that allows you to interact with the Open
 
 ## Installation
 
-1. Clone the repository and install by running `pip install . ` in the directory.
-2. Set your OpenAI API key as an environment variable with the name `OPENAI_API_KEY`.
-3. Run the CLI by using the command `ai`.
+1. Clone the repository and change directory to the project's folder.
+```
+cd command-ai
+```
+
+2. Install the `ai` command by running `pip install . ` in the directory.
+```
+pip install .
+```
+
+
+3. Set your OpenAI API key as an environment variable with the name `OPENAI_API_KEY`.
+```
+export OPENAI_API_KEY="sk-..."
+```
 
 
 ## Usage
 
-Enter a prompt or some text you want to complete, and the AI will generate a response. You can also use the following commands:
+Run the `ai` command in your terminal.
+
+```
+ai
+```
+
+Enter a prompt, and the AI will generate a response.
+
+```
+>>> Hello, who are you?↩
+```
+
+You can also use the following commands:
 
 - `exit` - exit the CLI.
 - `log` - view the current conversation log.
@@ -26,13 +50,14 @@ Enter a prompt or some text you want to complete, and the AI will generate a res
 - `clear` - clear the current conversation log.
 - `forget` - delete the previous message.
 
+
 ## Arguments
 
 You can pass the following arguments to the CLI:
 
-- `--model` - the model to use for generating text completions.
-- `--max_tokens` - the maximum number of tokens (words) to generate in the completion.
-- `--temperature` - a value that determines the creativity and unpredictability of the AI's responses. A higher temperature results in more random responses, while a lower temperature results in more deterministic responses.
+- `-m, --model` - the model to use for generating text completions.
+- `-M, --max_tokens` - the maximum number of tokens (words) to generate in the completion.
+- `-t, --temperature` - a value that determines the creativity and unpredictability of the AI's responses. A higher temperature results in more random responses, while a lower temperature results in more deterministic responses.
 
 See the [OpenAI API docs](https://beta.openai.com/docs/api-reference/completions) for details.
 
@@ -41,9 +66,8 @@ See the [OpenAI API docs](https://beta.openai.com/docs/api-reference/completions
 
 ```
 % ai
-```
+Type 'exit' to exit.
 
-```
 >>> What is the meaning of life?
 
 The meaning of life is subjective and can vary from person to person. For some, it may be to find purpose, joy, and fulfillment in life, while for others, it may be to make a difference in the world or to find inner peace.
@@ -57,4 +81,9 @@ The meaning of life is subjective and can vary from person to person. For some, 
 >>> For you?
 
 For me, the meaning of life is to live a life of purpose, joy, and gratitude, and to make a positive impact on the world.
+
+
+>>> exit
+
+Goodbye!
 ```
