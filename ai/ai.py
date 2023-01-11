@@ -3,7 +3,6 @@
 import argparse
 import os
 import readline
-import sys
 from datetime import datetime
 from os import path
 from sys import stdout
@@ -30,11 +29,11 @@ class CompletionParams(NamedTuple):
     stream: bool = True
     logprobs: int = None
     echo: bool = False
-    stop: list[str] = [">>> "]
+    stop: list = [">>> "]
     presence_penalty: float = 0.0
     frequency_penalty: float = 0.0
     best_of: int = 1
-    logit_bias: dict[str, int] = {}
+    logit_bias: dict = {}
     user: str = ""
 
 
@@ -208,7 +207,7 @@ class ChatHistory:
     """
 
     def __init__(self):
-        self.messages: list[Message] = []
+        self.messages: list = []
 
     def add_message(self, message: Message) -> None:
         """Add a new message to the conversation."""

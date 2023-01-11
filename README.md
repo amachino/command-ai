@@ -5,7 +5,7 @@ An AI chatbot in your terminal, powered by OpenAI API.
 
 ## Requirements
 
-- Python 3.9+
+- Python 3.7+
 - OpenAI API key - obtain one from [here](https://beta.openai.com/signup/).
 
 
