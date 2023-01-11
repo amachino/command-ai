@@ -75,25 +75,29 @@ class ChatService:
 
     def start(self) -> None:
         """Start the chat service."""
-        print("Type 'exit' to exit." + "\n")
+        print('Type "/help" to see available commands.\n')
+
         try:
             while True:
                 line = input(">>> ")
                 if line == "":
                     continue
-                if line == "log":
+                if line == "/help":
+                    self.handle_command_help()
+                    continue
+                if line == "/log":
                     self.handle_command_log()
                     continue
-                if line == "save":
+                if line == "/save":
                     self.handle_command_save()
                     continue
-                if line == "clear":
+                if line == "/clear":
                     self.handle_command_clear()
                     continue
-                if line == "forget":
+                if line == "/forget":
                     self.handle_command_forget()
                     continue
-                if line == "exit":
+                if line == "/exit":
                     break
 
                 self.stream_completion(line, self.option)
@@ -106,6 +110,20 @@ class ChatService:
             raise
         finally:
             print("\nGoodbye!\n\n")
+
+    def handle_command_help(self) -> None:
+        """Print the help message."""
+        print(
+            """
+/help   - view available commands
+/exit   - exit the program
+/log    - view the current conversation log
+/save   - save the conversation log to a file
+/clear  - clear all the conversation log
+/forget - cancel the previous message
+
+"""
+        )
 
     def handle_command_log(self) -> None:
         """Print the conversation log."""

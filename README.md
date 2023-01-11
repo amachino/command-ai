@@ -1,6 +1,6 @@
 # command `ai`
 
-This is a command-line interface (CLI) that allows you to chat with an AI program powered by OpenAI API.
+An AI chatbot in your terminal, powered by OpenAI API.
 
 
 ## Requirements
@@ -11,18 +11,17 @@ This is a command-line interface (CLI) that allows you to chat with an AI progra
 
 ## Installation
 
-1. Clone the repository and change directory to the project's folder.
+1. Clone the repository and `cd` into it.
 ```
 cd command-ai
 ```
 
-2. Install the `ai` command by running `pip install . ` in the directory.
+2. Install the `ai` command by `pip install .`.
 ```
 pip install .
 ```
 
-
-3. Set your OpenAI API key as an environment variable with the name `OPENAI_API_KEY`.
+3. Set the OpenAI API key as an environment variable.
 ```
 export OPENAI_API_KEY="sk-..."
 ```
@@ -44,16 +43,17 @@ Enter a prompt, and the AI will generate a response.
 
 You can also use the following commands:
 
-- `exit` - exit the CLI.
-- `log` - view the current conversation log.
-- `save` - save the current conversation log to a file.
-- `clear` - clear the current conversation log.
-- `forget` - delete the previous message.
+- `/help`   - view available commands
+- `/exit`   - exit the program
+- `/log`    - view the current conversation log
+- `/save`   - save the conversation log to a file
+- `/clear`  - clear all the conversation log
+- `/forget` - cancel the previous message
 
 
 ## Arguments
 
-You can pass the following arguments to the CLI:
+You can pass the following arguments to the `ai` command:
 
 - `-m, --model` - the model to use for generating text completions.
 - `-M, --max_tokens` - the maximum number of tokens (words) to generate in the completion.
@@ -66,7 +66,7 @@ See the [OpenAI API docs](https://beta.openai.com/docs/api-reference/completions
 
 ```
 % ai
-Type 'exit' to exit.
+Type "/help" to see available commands.
 
 >>> What is the meaning of life?
 
@@ -83,7 +83,7 @@ The meaning of life is subjective and can vary from person to person. For some, 
 For me, the meaning of life is to live a life of purpose, joy, and gratitude, and to make a positive impact on the world.
 
 
->>> exit
+>>> /exit
 
 Goodbye!
 ```
