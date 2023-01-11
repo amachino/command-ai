@@ -1,24 +1,24 @@
 #!/usr/bin/env python
 
-"""A chat service that uses the OpenAI API to complete messages."""
 import argparse
-import datetime
 import os
 import readline
 import sys
+from datetime import datetime
 from os import path
+from sys import stdout
 from typing import NamedTuple, Optional
 
 import openai
 
-openai.api_key = os.getenv("OPENAI_API_KEY")
 
-# See API docs for details
-# https://beta.openai.com/docs/api-reference/completions
+class CompletionParams(NamedTuple):
+    """
+    Parameters for the completion API.
 
-
-class CompletionOption(NamedTuple):
-    """Options for the completion API."""
+    See API docs for details
+    https://beta.openai.com/docs/api-reference/completions
+    """
 
     model: str = "text-davinci-003"
     prompt: str = None
@@ -30,11 +30,11 @@ class CompletionOption(NamedTuple):
     stream: bool = True
     logprobs: int = None
     echo: bool = False
-    stop: list = [">>> "]
+    stop: list[str] = [">>> "]
     presence_penalty: float = 0.0
     frequency_penalty: float = 0.0
     best_of: int = 1
-    logit_bias: dict = {}
+    logit_bias: dict[str, int] = {}
     user: str = ""
 
 
@@ -47,31 +47,41 @@ class Message(NamedTuple):
 
 class ChatService:
     """
-    A chat service that uses the OpenAI API to complete messages.
+    A chat service that uses the OpenAI API to generate responses.
 
     Attributes
     ----------
     context : str
         The context for the conversation.
-    logger : ChatLogger
-        The conversation logger.
+    history : ChatHistory
+        The conversation history.
     memory : int
         The number of messages to remember.
-    option : CompletionOption
-        The options for the completion API.
+    params : CompletionParams
+        The parameters for the completion API.
     """
 
-    def __init__(self, option: CompletionOption):
+    def __init__(
+        self,
+        context="The following is a conversation with an AI program.",
+        memory=3000,
+        params=CompletionParams(),
+    ):
         """
         Parameters
         ----------
-        option : CompletionOption
-            The options for the completion API.
+        context : str
+            The context for the conversation.
+        memory : int
+            The number of messages to remember.
+        params : CompletionParams
+            The parameters for the completion API.
         """
-        self.context = "The following is a conversation with an AI program."
-        self.logger = ChatLogger()
-        self.memory = 3000
-        self.option = option
+        self.context = context
+        self.memory = memory
+        self.params = params
+
+        self.history = ChatHistory()
 
     def start(self) -> None:
         """Start the chat service."""
@@ -100,7 +110,7 @@ class ChatService:
                 if line == "/exit":
                     break
 
-                self.stream_completion(line, self.option)
+                self.stream_completion(line, self.params)
 
         except (KeyboardInterrupt, EOFError):
             pass
@@ -127,8 +137,8 @@ class ChatService:
 
     def handle_command_log(self) -> None:
         """Print the conversation log."""
-        log = self.logger.get_log()
-        stats = self.logger.get_stats()
+        log = self.history.get_log()
+        stats = self.history.get_stats()
         if log:
             print(f"\n\033[92m{stats}\033[00m\n")
             print(f"\033[96m{log}\033[00m\n\n")
@@ -137,18 +147,18 @@ class ChatService:
 
     def handle_command_save(self) -> None:
         """Save the conversation log to a file."""
-        file_path = self.logger.save_log()
+        file_path = self.history.save_log()
         print("saved: " + file_path)
 
     def handle_command_clear(self) -> None:
-        """Clear the conversation log."""
-        self.logger.clear_log()
+        """Clear all the history of the conversation."""
+        self.history.clear_log()
         print("cleared")
 
     def handle_command_forget(self) -> None:
-        """Forget the last message in the conversation."""
-        self.logger.remove_last_message()
-        previous_message = self.logger.get_last_message()
+        """Delete the last message in the conversation."""
+        self.history.remove_last_message()
+        previous_message = self.history.get_last_message()
         if previous_message:
             print("\n" + previous_message.completion + "\n\n")
 
@@ -158,38 +168,38 @@ class ChatService:
         context = self.context.strip()
         if context:
             prompt += context + "\n\n\n"
-        log = self.logger.get_log()
+        log = self.history.get_log()
         log = log[-self.memory :]
         if log:
             prompt += log + "\n\n\n"
         prompt += ">>> " + line + "\n"
         return prompt
 
-    def stream_completion(self, line: str, option: CompletionOption) -> None:
+    def stream_completion(self, line: str, params: CompletionParams) -> None:
         """Stream completions to stdout as they become available."""
         prompt = self.create_prompt(line)
 
-        option = option._replace(prompt=prompt, stream=True, n=1)
+        params = params._replace(prompt=prompt, stream=True, n=1)
 
-        stream = openai.Completion.create(**option._asdict())
+        stream = openai.Completion.create(**params._asdict())
 
-        sys.stdout.write("\n")
+        stdout.write("\n")
         buf = ""
         for obj in stream:
             text = obj.choices[0].text
             if buf != "" or text != "\n":
-                sys.stdout.write(text)
-                sys.stdout.flush()
+                stdout.write(text)
+                stdout.flush()
                 buf += text
         buf = buf.strip()
-        sys.stdout.write("\n\n\n")
+        stdout.write("\n\n\n")
         message = Message(prompt=line, completion=buf)
-        self.logger.add_message(message)
+        self.history.add_message(message)
 
 
-class ChatLogger:
+class ChatHistory:
     """
-    A conversation logger.
+    The history of the conversation.
 
     Attributes
     ----------
@@ -235,7 +245,7 @@ class ChatLogger:
         log_dir = path.join(home_dir, ".ai", "log")
         if not path.exists(log_dir):
             os.makedirs(log_dir)
-        now = datetime.datetime.now()
+        now = datetime.now()
         file_name = now.strftime("%Y%m%d%H%M%S") + ".txt"
         file_path = path.join(log_dir, file_name)
 
@@ -250,9 +260,9 @@ class ChatLogger:
         self.messages.clear()
 
 
-def parse_args() -> CompletionOption:
-    """Parse command line arguments."""
-    default = CompletionOption()
+def create_params_from_args() -> CompletionParams:
+    """Create a CompletionParams object from command line arguments."""
+    default = CompletionParams()
 
     parser = argparse.ArgumentParser()
 
@@ -261,17 +271,18 @@ def parse_args() -> CompletionOption:
     parser.add_argument("-t", "--temperature", type=float, default=default.temperature)
 
     args = parser.parse_args()
-    option = CompletionOption(**vars(args))
-    return option
+    params = CompletionParams(**vars(args))
+    return params
 
 
 def main():
-    if not os.getenv("OPENAI_API_KEY"):
+    openai.api_key = os.getenv("OPENAI_API_KEY")
+    if not openai.api_key:
         print("Please set OPENAI_API_KEY environment variable.")
         exit()
 
-    option = parse_args()
-    chat = ChatService(option=option)
+    params = create_params_from_args()
+    chat = ChatService(params=params)
     chat.start()
 
 
