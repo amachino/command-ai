@@ -5,7 +5,7 @@ This is a command-line interface (CLI) that allows you to chat with an AI progra
 
 ## Requirements
 
-- Python 3
+- Python 3.9+
 - OpenAI API key - obtain one from [here](https://beta.openai.com/signup/).
 
 

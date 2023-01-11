@@ -1,8 +1,9 @@
 [project]
 name = "command-ai"
 version = "0.0.3"
+requires-python = ">=3.9"
 dependencies = [
-    "openai>=0.26.0",
+    "openai>=0.26",
 ]
 
 [project.scripts]
