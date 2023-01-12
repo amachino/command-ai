@@ -1,6 +1,6 @@
 # command `ai`
 
-An AI chatbot in your terminal, powered by OpenAI API.
+AI chatbot in your terminal, powered by OpenAI API.
 
 
 ## Requirements
@@ -21,7 +21,7 @@ cd command-ai
 pip install .
 ```
 
-3. Set the OpenAI API key as an environment variable.
+3. Set your OpenAI API key as an environment variable.
 ```
 export OPENAI_API_KEY="sk-..."
 ```
