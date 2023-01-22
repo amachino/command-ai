@@ -50,6 +50,17 @@ You can also use the following commands:
 - `/clear`  - clear all the conversation log
 - `/forget` - cancel the previous message
 
+Optionally, you can create `~/.ai/context.txt` file to specify the chat context. The context will be used as the prompt for the AI's responses.
+
+An example of `~/.ai/context.txt` file:
+
+```
+The following is a conversation with an AI assistant. The assistant is helpful, creative, clever, and very friendly.
+
+>>> Hello, who are you?
+
+I am an AI created by OpenAI. How can I help you today?
+```
 
 ## Arguments
 
