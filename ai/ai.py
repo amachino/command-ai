@@ -62,7 +62,7 @@ class ChatService:
 
     def __init__(
         self,
-        context="The following is a conversation with an AI program.",
+        context="",
         memory=3000,
         params=CompletionParams(),
     ):
@@ -274,14 +274,25 @@ def create_params_from_args() -> CompletionParams:
     return params
 
 
+def read_context() -> str:
+    """Read the chat context from `~/.ai/context.txt` and return as a string."""
+    home_dir = path.expanduser("~")
+    context_file = path.join(home_dir, ".ai", "context.txt")
+    if not path.exists(context_file):
+        return "The following is a conversation with an AI program."
+    with open(context_file, mode="r") as f:
+        return f.read()
+
+
 def main():
     openai.api_key = os.getenv("OPENAI_API_KEY")
     if not openai.api_key:
         print("Please set OPENAI_API_KEY environment variable.")
         exit()
 
+    context = read_context()
     params = create_params_from_args()
-    chat = ChatService(params=params)
+    chat = ChatService(context=context, params=params)
     chat.start()
 
 
