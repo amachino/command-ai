@@ -6,7 +6,7 @@ AI chatbot in your terminal, powered by OpenAI API.
 ## Requirements
 
 - Python 3.7+
-- OpenAI API key - obtain one from [here](https://beta.openai.com/signup/).
+- OpenAI API key - obtain one from [here](https://platform.openai.com/account/api-keys).
 
 
 ## Installation
@@ -43,34 +43,31 @@ Enter a prompt, and the AI will generate a response.
 
 You can also use the following commands:
 
-- `/help`   - view available commands
-- `/exit`   - exit the program
-- `/log`    - view the current conversation log
-- `/save`   - save the conversation log to a file
-- `/clear`  - clear all the conversation log
-- `/forget` - cancel the previous message
+- `/help`    - view available commands
+- `/exit`    - exit the program
+- `/log`     - view the current conversation log
+- `/save`    - save the conversation log to a file
+- `/clear`   - clear all the conversation log
+- `/forget`  - cancel the previous message
+- `/context` - show the current chat context
 
-Optionally, you can create `~/.ai/context.txt` file to specify the chat context. The context will be used as the prompt for the AI's responses.
+Optionally, you can create `~/.ai/context.txt` file to specify the chat context. The context will be used as the system prompt for the AI's responses.
 
 An example of `~/.ai/context.txt` file:
 
 ```
 The following is a conversation with an AI assistant. The assistant is helpful, creative, clever, and very friendly.
-
->>> Hello, who are you?
-
-I am an AI created by OpenAI. How can I help you today?
 ```
 
 ## Arguments
 
 You can pass the following arguments to the `ai` command:
 
-- `-m, --model` - the model to use for generating text completions.
-- `-M, --max_tokens` - the maximum number of tokens (words) to generate in the completion.
-- `-t, --temperature` - a value that determines the creativity and unpredictability of the AI's responses. A higher temperature results in more random responses, while a lower temperature results in more deterministic responses.
+- `-m, --model` - ID of the model to use. Currently, only `gpt-3.5-turbo` and `gpt-3.5-turbo-0301` are supported.
+- `-M, --max_tokens` - The maximum number of tokens allowed for the generated answer. By default, the number of tokens the model can return will be (4096 - prompt tokens).
+- `-t, --temperature` - What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
 
-See the [OpenAI API docs](https://beta.openai.com/docs/api-reference/completions) for details.
+See the [OpenAI API docs](https://platform.openai.com/docs/api-reference/chat) for details.
 
 
 ## Examples
@@ -79,20 +76,13 @@ See the [OpenAI API docs](https://beta.openai.com/docs/api-reference/completions
 % ai
 Type "/help" to see available commands.
 
->>> What is the meaning of life?
+>>> When will singularity happen?
 
-The meaning of life is subjective and can vary from person to person. For some, it may be to find purpose, joy, and fulfillment in life, while for others, it may be to make a difference in the world or to find inner peace.
+It is difficult to predict exactly when the singularity will occur, as it depends on a variety of factors and is subject to ongoing debate and speculation among experts in the field of artificial intelligence. However, some estimates suggest that it could happen within the next few decades, as advances in technology continue to accelerate at an unprecedented rate. Ultimately, the timing and exact nature of the singularity will depend on a range of social, economic, and technological factors that are difficult to predict with certainty.
 
+>>> Translate it into Japanese.
 
->>> Translate it into Japanese
-
-人生の意味は主観的で、人それぞれに異なります。一部の人にとっては、人生に目的、喜び、満足感を見つけることかもしれませんが、他の人にとっては、世界を変えることや内なる平和を見つけることかもしれません。
-
-
->>> For you?
-
-For me, the meaning of life is to live a life of purpose, joy, and gratitude, and to make a positive impact on the world.
-
+シンギュラリティがいつ起こるかを正確に予測することは難しいため、人工知能の専門家たちの間でも議論や予測が続いています。ただし、技術の進歩が前例のない速度で進んでいることを考慮すると、数十年以内に起こる可能性があるとされています。最終的にシンギュラリティの発生時期や正確な性質は、社会、経済、技術面などに関する幅広い要因に依存するため、確実に予測することは困難です。
 
 >>> /exit
 

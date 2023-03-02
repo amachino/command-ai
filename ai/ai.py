@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import argparse
+import json
 import os
 import readline
 from datetime import datetime
@@ -11,37 +12,30 @@ from typing import NamedTuple, Optional
 import openai
 
 
-class CompletionParams(NamedTuple):
+class ChatCompletionParams(NamedTuple):
     """
-    Parameters for the completion API.
+    Parameters for the chat completion API.
 
     See API docs for details
-    https://beta.openai.com/docs/api-reference/completions
+    https://platform.openai.com/docs/api-reference/chat
     """
-
-    model: str = "text-davinci-003"
-    prompt: str = None
-    suffix: str = None
+    model: str = "gpt-3.5-turbo"
+    messages: list = []
     max_tokens: int = 1000
-    temperature: float = 0.5
+    temperature: float = 1.0
     top_p: float = None
     n: int = 1
     stream: bool = True
-    logprobs: int = None
-    echo: bool = False
-    stop: list = [">>> "]
+    # stop: list = []
     presence_penalty: float = 0.0
     frequency_penalty: float = 0.0
-    best_of: int = 1
     logit_bias: dict = {}
     user: str = ""
 
 
-class Message(NamedTuple):
-    """A message in the conversation."""
-
-    prompt: str
-    completion: str
+class ChatConfig(NamedTuple):
+    context: str = ""
+    params: ChatCompletionParams = ChatCompletionParams()
 
 
 class ChatService:
@@ -54,33 +48,24 @@ class ChatService:
         The context for the conversation.
     history : ChatHistory
         The conversation history.
-    memory : int
-        The number of messages to remember.
-    params : CompletionParams
-        The parameters for the completion API.
+    params : ChatCompletionParams
+        The parameters for the chat completion API.
     """
 
     def __init__(
         self,
-        context="",
-        memory=3000,
-        params=CompletionParams(),
+        config=ChatConfig(),
     ):
         """
         Parameters
         ----------
-        context : str
-            The context for the conversation.
-        memory : int
-            The number of messages to remember.
-        params : CompletionParams
-            The parameters for the completion API.
+        config : ChatConfig
+            The configuration for the chat service.
         """
-        self.context = context
-        self.memory = memory
-        self.params = params
+        self.context = config.context
+        self.params = config.params
 
-        self.history = ChatHistory()
+        self.history = ChatHistory(context=config.context)
 
     def start(self) -> None:
         """Start the chat service."""
@@ -106,6 +91,9 @@ class ChatService:
                 if line == "/forget":
                     self.handle_command_forget()
                     continue
+                if line == "/context":
+                    self.handle_command_context()
+                    continue
                 if line == "/exit":
                     break
 
@@ -118,82 +106,88 @@ class ChatService:
         except Exception:
             raise
         finally:
-            print("\nGoodbye!\n\n")
+            print("\nGoodbye!\n")
 
     def handle_command_help(self) -> None:
         """Print the help message."""
         print(
             """
-/help   - view available commands
-/exit   - exit the program
-/log    - view the current conversation log
-/save   - save the conversation log to a file
-/clear  - clear all the conversation log
-/forget - cancel the previous message
-
+/help    - view available commands
+/exit    - exit the program
+/log     - view the current conversation log
+/save    - save the conversation log to a file
+/clear   - clear all the conversation log
+/forget  - cancel the previous message
+/context - show the current chat context
 """
         )
 
     def handle_command_log(self) -> None:
         """Print the conversation log."""
         log = self.history.get_log()
-        stats = self.history.get_stats()
         if log:
-            print(f"\n\033[92m{stats}\033[00m\n")
-            print(f"\033[96m{log}\033[00m\n\n")
+            print(f"\n\033[96m{log}\033[00m\n")
         else:
-            print("empty")
+            print("\nempty\n")
 
     def handle_command_save(self) -> None:
         """Save the conversation log to a file."""
         file_path = self.history.save_log()
-        print("saved: " + file_path)
+        print("\nsaved: " + file_path + "\n")
 
     def handle_command_clear(self) -> None:
         """Clear all the history of the conversation."""
         self.history.clear_log()
-        print("cleared")
+        print("\ncleared\n")
 
     def handle_command_forget(self) -> None:
         """Delete the last message in the conversation."""
-        self.history.remove_last_message()
+        self.history.remove_last_conversation()
         previous_message = self.history.get_last_message()
         if previous_message:
-            print("\n" + previous_message.completion + "\n\n")
+            print("\n" + previous_message["content"] + "\n")
 
-    def create_prompt(self, line: str) -> str:
+    def handle_command_context(self) -> None:
+        """Show the current context."""
+        print("\n" + self.context + "\n")
+
+    def create_prompt_messages(self, line: str) -> list:
         """Create a prompt for the AI to complete."""
-        prompt = ""
+        messages = []
         context = self.context.strip()
         if context:
-            prompt += context + "\n\n\n"
-        log = self.history.get_log()
-        log = log[-self.memory :]
+            messages.append({"role": "system", "content": context})
+        log = self.history.get_messages()
         if log:
-            prompt += log + "\n\n\n"
-        prompt += ">>> " + line + "\n"
-        return prompt
+            messages.extend(log)
+        prompt = {"role": "user", "content": line}
+        messages.append(prompt)
+        self.history.add_message(prompt)
+        return messages
 
-    def stream_completion(self, line: str, params: CompletionParams) -> None:
+    def stream_completion(self, line: str, params: ChatCompletionParams) -> None:
         """Stream completions to stdout as they become available."""
-        prompt = self.create_prompt(line)
+        messages = self.create_prompt_messages(line)
 
-        params = params._replace(prompt=prompt, stream=True, n=1)
+        params = params._replace(messages=messages, stream=True, n=1)
 
-        stream = openai.Completion.create(**params._asdict())
+        stream = openai.ChatCompletion.create(**params._asdict())
 
         stdout.write("\n")
         buf = ""
         for obj in stream:
-            text = obj.choices[0].text
-            if buf != "" or text != "\n":
-                stdout.write(text)
-                stdout.flush()
-                buf += text
+            choice = obj.choices[0]
+            delta = choice["delta"]
+            if "content" in delta:
+                content = delta["content"]
+                # don't print initial empty lines
+                if buf != "" or not content.strip() == "":
+                    stdout.write(content)
+                    stdout.flush()
+                    buf += content
         buf = buf.strip()
-        stdout.write("\n\n\n")
-        message = Message(prompt=line, completion=buf)
-        self.history.add_message(message)
+        stdout.write("\n\n")
+        self.history.add_message({"role": "assistant", "content": buf})
 
 
 class ChatHistory:
@@ -202,39 +196,41 @@ class ChatHistory:
 
     Attributes
     ----------
-    messages : list[Message]
+    context : str
+        The context for the conversation.
+    messages : list[dict]
         The messages in the conversation.
     """
 
-    def __init__(self):
+    def __init__(self, context=""):
+        self.context = context
         self.messages: list = []
 
-    def add_message(self, message: Message) -> None:
+    def add_message(self, message: dict) -> None:
         """Add a new message to the conversation."""
         self.messages.append(message)
 
-    def remove_last_message(self) -> None:
-        """Remove the last message in the conversation."""
-        if self.messages:
-            self.messages.pop()
+    def get_messages(self) -> list:
+        """Return the messages in the conversation."""
+        return self.messages
 
-    def get_last_message(self) -> Optional[Message]:
+    def get_last_message(self) -> Optional[dict]:
         """Return the last message in the conversation."""
         return self.messages[-1] if self.messages else None
 
-    def get_stats(self) -> str:
-        """Return the number of requests, characters, and bytes in the log."""
-        n_reqs = len(self.messages)
-        n_chars = len(self.get_log())
-        n_bytes = len(self.get_log().encode("utf-8"))
-        return f"{n_reqs} reqs / {n_chars} chars / {n_bytes} bytes"
+    def remove_last_conversation(self) -> None:
+        """Remove the last message in the conversation."""
+        if self.messages:
+            self.messages = self.messages[:-2]
 
     def get_log(self) -> str:
         """Return the text of the conversation log."""
         log = ""
         for message in self.messages:
-            log += ">>> " + message.prompt.strip() + "\n\n"
-            log += message.completion.strip() + "\n\n\n"
+            if message["role"] == "user":
+                log += ">>> " + message["content"].strip() + "\n\n"
+            if message["role"] == "assistant":
+                log += message["content"].strip() + "\n\n"
         log = log.strip()
         return log
 
@@ -245,13 +241,14 @@ class ChatHistory:
         if not path.exists(log_dir):
             os.makedirs(log_dir)
         now = datetime.now()
-        file_name = now.strftime("%Y%m%d%H%M%S") + ".txt"
+        file_name = now.strftime("%Y%m%d%H%M%S") + ".jsonl"
         file_path = path.join(log_dir, file_name)
 
         with open(file_path, mode="w") as f:
-            stats = self.get_stats()
-            log = self.get_log()
-            f.write(stats + "\n\n" + log)
+            context = {"role": "system", "content": self.context}
+            log = json.dumps(context, ensure_ascii=False) + "\n"
+            log += "\n".join([json.dumps(m, ensure_ascii=False) for m in self.messages])
+            f.write(log)
         return file_path
 
     def clear_log(self) -> None:
@@ -259,9 +256,9 @@ class ChatHistory:
         self.messages.clear()
 
 
-def create_params_from_args() -> CompletionParams:
+def read_args() -> argparse.Namespace:
     """Create a CompletionParams object from command line arguments."""
-    default = CompletionParams()
+    default = ChatCompletionParams()
 
     parser = argparse.ArgumentParser()
 
@@ -269,9 +266,17 @@ def create_params_from_args() -> CompletionParams:
     parser.add_argument("-M", "--max_tokens", type=int, default=default.max_tokens)
     parser.add_argument("-t", "--temperature", type=float, default=default.temperature)
 
-    args = parser.parse_args()
-    params = CompletionParams(**vars(args))
-    return params
+    return parser.parse_args()
+
+
+def create_chat_config() -> ChatConfig:
+    context = read_context()
+
+    args = read_args()
+    params = ChatCompletionParams(**vars(args))
+
+    config = ChatConfig(context=context, params=params)
+    return config
 
 
 def read_context() -> str:
@@ -281,7 +286,7 @@ def read_context() -> str:
     if not path.exists(context_file):
         return "The following is a conversation with an AI program."
     with open(context_file, mode="r") as f:
-        return f.read()
+        return f.read().strip()
 
 
 def main():
@@ -290,9 +295,8 @@ def main():
         print("Please set OPENAI_API_KEY environment variable.")
         exit()
 
-    context = read_context()
-    params = create_params_from_args()
-    chat = ChatService(context=context, params=params)
+    config = create_chat_config()
+    chat = ChatService(config=config)
     chat.start()
 
 
