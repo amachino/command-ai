@@ -270,7 +270,7 @@ def read_args() -> argparse.Namespace:
 
 
 def create_chat_config() -> ChatConfig:
-    context = read_context()
+    context = load_context()
 
     args = read_args()
     params = ChatCompletionParams(**vars(args))
@@ -279,14 +279,27 @@ def create_chat_config() -> ChatConfig:
     return config
 
 
-def read_context() -> str:
+def load_context() -> str:
     """Read the chat context from `~/.ai/context.txt` and return as a string."""
     home_dir = path.expanduser("~")
     context_file = path.join(home_dir, ".ai", "context.txt")
-    if not path.exists(context_file):
-        return "The following is a conversation with an AI program."
-    with open(context_file, mode="r") as f:
-        return f.read().strip()
+
+    context = ""
+
+    now = datetime.now()
+    current_time = now.strftime("%a, %b %d %Y %I:%M %p")
+    timezone = now.astimezone().tzname()
+    context += f"Current time: {current_time} {timezone}\n"
+
+    username = os.getlogin()
+    context += f"User's name: {username}\n\n"
+
+    if path.exists(context_file):
+        with open(context_file, mode="r") as f:
+            context += f.read().strip()
+    else:
+        context += f"The following is a conversation with an AI assistant named Ai (愛). The assistant is helpful, creative, clever, and very friendly." 
+    return context
 
 
 def main():
