@@ -289,10 +289,7 @@ def load_context() -> str:
     now = datetime.now()
     current_time = now.strftime("%a, %b %d %Y %I:%M %p")
     timezone = now.astimezone().tzname()
-    context += f"Current time: {current_time} {timezone}\n"
-
-    username = os.getlogin()
-    context += f"User's name: {username}\n\n"
+    context += f"Current time: {current_time} {timezone}\n\n"
 
     if path.exists(context_file):
         with open(context_file, mode="r") as f:
