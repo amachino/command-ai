@@ -309,10 +309,6 @@ def load_context() -> str:
 
 def main():
     """Start the chat service."""
-    if not os.getenv("OPENAI_API_KEY"):
-        print("Please set OPENAI_API_KEY environment variable.")
-        exit()
-
     config = create_chat_config()
     chat = ChatService(config=config)
     chat.start()
