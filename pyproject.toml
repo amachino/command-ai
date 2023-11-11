@@ -4,11 +4,9 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "command-ai"
-version = "0.0.6"
+version = "0.1.0"
 requires-python = ">=3.7"
-dependencies = [
-    "openai>=0.27",
-]
+dependencies = ["openai>=1.0"]
 
 [project.scripts]
 ai = "ai.ai:main"
