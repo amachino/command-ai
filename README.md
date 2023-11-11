@@ -5,8 +5,8 @@ AI chatbot in your terminal, powered by OpenAI API.
 
 ## Requirements
 
-- Python 3.7+
-- OpenAI API key - obtain one from [here](https://platform.openai.com/account/api-keys).
+- Python 3.8+
+- OpenAI API key - obtain one from [here](https://platform.openai.com/api-keys).
 
 
 ## Installation
@@ -63,7 +63,7 @@ The following is a conversation with an AI assistant. The assistant is helpful, 
 
 You can pass the following arguments to the `ai` command:
 
-- `-m, --model` - ID of the model to use. Currently, only `gpt-3.5-turbo` and `gpt-3.5-turbo-0301` are supported.
+- `-m, --model` - ID of the model to use. Check available models [here](https://platform.openai.com/docs/models/models).
 - `-M, --max_tokens` - The maximum number of tokens allowed for the generated answer. By default, the number of tokens the model can return will be (4096 - prompt tokens).
 - `-t, --temperature` - What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
 

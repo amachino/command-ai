@@ -1,15 +1,21 @@
 #!/usr/bin/env python
 
+"""
+A chat service that uses the OpenAI API to generate responses.
+"""
+
 import argparse
 import json
 import os
-import readline
+import readline  # pylint: disable=unused-import
 from datetime import datetime
 from os import path
 from sys import stdout
 from typing import NamedTuple, Optional
 
-import openai
+from openai import OpenAI
+
+client = OpenAI()
 
 
 class ChatCompletionParams(NamedTuple):
@@ -19,14 +25,12 @@ class ChatCompletionParams(NamedTuple):
     See API docs for details
     https://platform.openai.com/docs/api-reference/chat
     """
-    model: str = "gpt-3.5-turbo"
-    messages: list = []
+
+    model: str = "gpt-4"
     max_tokens: int = 1000
-    temperature: float = 1.0
-    top_p: float = None
+    temperature: Optional[float] = 1.0
+    top_p: Optional[float] = None
     n: int = 1
-    stream: bool = True
-    # stop: list = []
     presence_penalty: float = 0.0
     frequency_penalty: float = 0.0
     logit_bias: dict = {}
@@ -34,6 +38,10 @@ class ChatCompletionParams(NamedTuple):
 
 
 class ChatConfig(NamedTuple):
+    """
+    Configuration for the chat service.
+    """
+
     context: str = ""
     params: ChatCompletionParams = ChatCompletionParams()
 
@@ -101,9 +109,8 @@ class ChatService:
 
         except (KeyboardInterrupt, EOFError):
             pass
-        except openai.error.InvalidRequestError as e:
+        except Exception as e:
             print(e)
-        except Exception:
             raise
         finally:
             print("\nGoodbye!\n")
@@ -144,7 +151,7 @@ class ChatService:
         """Delete the last message in the conversation."""
         self.history.remove_last_conversation()
         previous_message = self.history.get_last_message()
-        if previous_message:
+        if previous_message is not None:
             print("\n" + previous_message["content"] + "\n")
 
     def handle_command_context(self) -> None:
@@ -169,17 +176,19 @@ class ChatService:
         """Stream completions to stdout as they become available."""
         messages = self.create_prompt_messages(line)
 
-        params = params._replace(messages=messages, stream=True, n=1)
-
-        stream = openai.ChatCompletion.create(**params._asdict())
+        stream = client.chat.completions.create(
+            stream=True,
+            messages=messages,
+            **params._asdict(),
+        )
 
         stdout.write("\n")
         buf = ""
         for obj in stream:
             choice = obj.choices[0]
-            delta = choice["delta"]
-            if "content" in delta:
-                content = delta["content"]
+            delta = choice.delta
+            if delta.content:
+                content = delta.content
                 # don't print initial empty lines
                 if buf != "" or not content.strip() == "":
                     stdout.write(content)
@@ -204,7 +213,7 @@ class ChatHistory:
 
     def __init__(self, context=""):
         self.context = context
-        self.messages: list = []
+        self.messages = []
 
     def add_message(self, message: dict) -> None:
         """Add a new message to the conversation."""
@@ -244,7 +253,7 @@ class ChatHistory:
         file_name = now.strftime("%Y%m%d%H%M%S") + ".jsonl"
         file_path = path.join(log_dir, file_name)
 
-        with open(file_path, mode="w") as f:
+        with open(file_path, mode="w", encoding="utf-8") as f:
             context = {"role": "system", "content": self.context}
             log = json.dumps(context, ensure_ascii=False) + "\n"
             log += "\n".join([json.dumps(m, ensure_ascii=False) for m in self.messages])
@@ -270,6 +279,7 @@ def read_args() -> argparse.Namespace:
 
 
 def create_chat_config() -> ChatConfig:
+    """Create a ChatConfig object from command line arguments."""
     context = load_context()
 
     args = read_args()
@@ -292,19 +302,13 @@ def load_context() -> str:
     context += f"Current time: {current_time} {timezone}\n\n"
 
     if path.exists(context_file):
-        with open(context_file, mode="r") as f:
+        with open(context_file, mode="r", encoding="utf-8") as f:
             context += f.read().strip()
-    else:
-        context += f"The following is a conversation with an AI assistant named Ai (愛). The assistant is helpful, creative, clever, and very friendly." 
     return context
 
 
 def main():
-    openai.api_key = os.getenv("OPENAI_API_KEY")
-    if not openai.api_key:
-        print("Please set OPENAI_API_KEY environment variable.")
-        exit()
-
+    """Start the chat service."""
     config = create_chat_config()
     chat = ChatService(config=config)
     chat.start()
